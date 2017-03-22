@@ -3,7 +3,6 @@ import numpy as np
 import librosa as rosa
 import librosa.display
 from scipy import io
-import matplotlib.pyplot as plt
 
 def slice_chroma( chroma, num_slices ):
     """Slice the chromagram and produce a sample set of frames
@@ -76,21 +75,7 @@ def extract_chroma( wavfile ):
         print "data is rank:", chroma.ndim
         print "banks:", chroma.shape[0], "frames:", chroma.shape[1]
 
-        plt.figure()
-        rosa.display.specshow( chroma, sr=fs, hop_length=hop_length, y_axis='chroma', x_axis='time' )
-        plt.colorbar()
-        plt.title('Chromagram')
-        plt.tight_layout()
-        plt.show()
-
         chroma_sliced = slice_chroma( chroma, num_slices=26 )
-
-        plt.figure()
-        rosa.display.specshow( chroma_sliced, y_axis='chroma', x_axis='frames' )
-        plt.colorbar()
-        plt.title( 'Sliced Chromagram, 26 frames for 3 secs' )
-        plt.tight_layout()
-        plt.show()
 
         return chroma_sliced
 
