@@ -5,10 +5,10 @@ import librosa.display
 from scipy import io
 
 def slice_chroma( chroma, num_slices ):
-    """Slice the chromagram and produce a sample set of frames
+    '''Slice the chromagram and produce a sample set of frames
     
     Parameters
-    ----------
+    
     chroma : np.ndarray [shape=(n_chroma, t)]
         Normalized energy for each chroma bin at each frame
     
@@ -21,11 +21,11 @@ def slice_chroma( chroma, num_slices ):
             8192 / 8 hop length
     
     Returns
-    -------
+    
     chroma_sliced : np.ndarray [shape=( n_chroma, len( frame_indices ) )]
         Select number of slices from the original chromagram
 
-    """
+    '''
 
     interval = chroma.shape[1] / num_slices
     slices = [frame_i for frame_i in range( 0, chroma.shape[1] ) if frame_i % interval == 1]
@@ -37,10 +37,10 @@ def slice_chroma( chroma, num_slices ):
     return chroma_sliced
 
 def extract_chroma( wavfile ):
-    """Produce a sliced version of a chromagram created using librosa ( http://librosa.github.io/librosa/ )
+    '''Produce a sliced version of a chromagram created using librosa ( http://librosa.github.io/librosa/ )
     
     Parameters
-    ----------
+    
     wavfile : str
         Name of wav file to interpret
     
@@ -50,34 +50,34 @@ def extract_chroma( wavfile ):
             Single instrument
     
     Returns
-    -------
+    
     chroma_sliced : np.ndarray [shape=( n_chroma, len( slices ) )]
         Select number of slices from the original chromagram
     
-    """
+    '''
 
-    try:
-        fs, y = io.wavfile.read( sys.argv[1] )
+    fs, y = io.wavfile.read( wavfile )
 
-        # remove second channel if stereo
-        if y.shape[1] > 1:
-            y = y[:, 0]
-    except IndexError:
-        print "You need to provide the name of a wav file to read."
-    else:
-        n_fft = 8192
-        # shift by hop_length for each successive frame
-        hop_length = n_fft / 8
-        filterbank_params = {'n_chroma':36, 'ctroct':4.0, 'base_c':True}
+    # remove second channel if stereo
+    if y.shape[1] > 1:
+        y = y[:, 0]
 
-        chroma = rosa.feature.chroma_stft( y=y, sr=fs, n_fft=n_fft, hop_length=hop_length, **filterbank_params )
+    n_fft = 8192
+    # shift by hop_length for each successive frame
+    hop_length = n_fft / 8
+    filterbank_params = {'n_chroma':36, 'ctroct':4.0, 'base_c':True}
 
-        print "data is rank:", chroma.ndim
-        print "banks:", chroma.shape[0], "frames:", chroma.shape[1]
+    chroma = rosa.feature.chroma_stft( y=y, sr=fs, n_fft=n_fft, hop_length=hop_length, **filterbank_params )
 
-        chroma_sliced = slice_chroma( chroma, num_slices=26 )
+    print "data is rank:", chroma.ndim
+    print "banks:", chroma.shape[0], "frames:", chroma.shape[1]
 
-        return chroma_sliced
+    chroma_sliced = slice_chroma( chroma, num_slices=26 )
+
+    return chroma_sliced
 
 if __name__ == "__main__":
-    extract_chroma( sys.argv[1] )
+    try:
+        extract_chroma( sys.argv[1] )
+    except IndexError:
+        print "You must provide the name of a wav file to process."
