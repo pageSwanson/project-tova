@@ -8,14 +8,14 @@ import collections
 import os, argparse
 import re
 
-import extract_chroma from extract_features
+import extract_features from extract_features
 
 # feature collection return type
 Dataset = collections.namedtuple( 'Dataset', ['data', 'target'] )
 
 def load_dataset( path_to_set ):
     ''' Sort through a directory of files, handling each file as a datapoint
-        Perform extraction ( using extract_chroma ), assign target ( label )
+        Perform extraction ( using extract_features ), assign target ( label )
 
         Parameters
 
@@ -28,11 +28,10 @@ def load_dataset( path_to_set ):
             A tuple containing the data set and the corresponding targets
 
     '''
-
     target, data = [], []
     for wavfile in os.listdir( path_to_set ):
         if wavfile.endswith( ".wav" ):
-            data.append( extract_chroma( wavfile ) )
+            data.append( extract_features( wavfile ) )
             target = re.split( "[]", wavfile )[1]
             target.append( target )
 
@@ -64,6 +63,8 @@ def use_network( usage, path_to_data ):
         # Specify that all features have real-value data
         feature_columns = [ tf.contrib.layers.real_valued_column( "", dimension=36 ) ]
         # Build neural network with layer unit specs
+        # information on layer decisions can be found here
+        # http://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
         classifier = tf.contrib.learn.DNNClassifier( feature_columns=feature_columns,
                                                      hidden_units=[ ?, ?, ? ],
                                                      n_classes=5,
@@ -91,8 +92,22 @@ def use_network( usage, path_to_data ):
         print "Test Accuracy: {0:f}".format( accuracy_score )
 
     elif usage == "-c":
+        # Specify that all features have real-value data
+        feature_columns = [ tf.contrib.layers.real_valued_column( "", dimension=36 ) ]
+        # define model from directory ( requires that model exists prior )
+        classifier = tf.contrib.learn.DNNClassifier( feature_columns=feature_columns,
+                                                     hidden_units=[ ?, ?, ? ],
+                                                     n_classes=5,
+                                                     model_dir="./model/phrase_model" )
         # perform classification with model
-        pass
+        # in this case, the data comes from a single wav file
+        def new_samples():
+            return np.array( extract_features( path_to_data ),
+                             dtype=np.float32 )
+
+        predictions = list( classifier.predict( input_fn=new_samples ) )
+
+        print "New Samples, Class Predictions:     {}\n".format( predictions )
 
 if __name__ == "__main__":
     try:

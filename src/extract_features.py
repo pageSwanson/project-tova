@@ -76,8 +76,15 @@ def extract_chroma( wavfile ):
 
     return chroma_sliced
 
+def extract_features( wavfile ):
+    '''Generic function used to invoke the data processing, providing simple replacement
+       of an extraction method
+
+    '''
+    return extract_chroma( wavfile )
+
 if __name__ == "__main__":
     try:
-        extract_chroma( sys.argv[1] )
+        extract_features( sys.argv[1] )
     except IndexError:
         print "You must provide the name of a wav file to process."
