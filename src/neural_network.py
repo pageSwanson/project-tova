@@ -60,34 +60,34 @@ def use_network( usage, path_to_data ):
         training_set = load_dataset( path_to_data + "/train" )
         testing_set = load_dataset( path_to_data + "/test" )
         
-        # Specify that all features have real-value data
-        feature_columns = [ tf.contrib.layers.real_valued_column( "", dimension=36 ) ]
-        # Build neural network with layer unit specs
         # information on layer decisions can be found here
         # http://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
+        #
+        # Specify that all features have real-value data
+        # Used to determine number of neurons for the input layer, one for each feature ( 36 )
+        feature_columns = [ tf.contrib.layers.real_valued_column( "", dimension=36 ) ]
+        #
+        # output layers determined here, single layer, one neuron for each class label ( 6 )
+        # size of hidden layer, based on mean of input and output neurons ( 21 ) 
         classifier = tf.contrib.learn.DNNClassifier( feature_columns=feature_columns,
-                                                     hidden_units=[ ?, ?, ? ],
-                                                     n_classes=5,
+                                                     hidden_units=[ 21 ],
+                                                     n_classes=6,
                                                      model_dir="./model/phrase_model" )
 
-        def get_train_inputs():
+        def get_inputs( data_set ):
             # construct training data correctly and return in the form of a tensor
-            x = # tensor representing the data from the training set
-            y = # representing targets
-            return x, y
+            feature_cols = { k: tf.constant( data_set[ k ].values ) for k in FEATURES } # dictionary of tensors
+            labels = tf.constant( data_set[ LABEL ].values ) # representing targets
+            return feature_columns, labels
 
         # Fit to the model, specifying how many steps to train
-        classifier.fit( input_fn=get_train_inputs, steps=? )
+        # step is 2000 for the time being, this is nearly arbitrary 
+        classifier.fit( input_fn=lambda : get_inputs( training_set ), steps=2000 )
 
         # If you want to track training progress, you can use a tensor flow monitor
 
-        def get_test_inputs():
-            x = # tensor for test data
-            y = # targets
-            return x, y
-
-        accuracy_score = classifier.evaluate( input_fn=get_test_inputs,
-                                              steps=? )["accuracy"]
+        accuracy_score = classifier.evaluate( input_fn=lambda : get_inputs( testing_set ),
+                                              steps=2000 )["accuracy"]
 
         print "Test Accuracy: {0:f}".format( accuracy_score )
 
@@ -96,16 +96,22 @@ def use_network( usage, path_to_data ):
         feature_columns = [ tf.contrib.layers.real_valued_column( "", dimension=36 ) ]
         # define model from directory ( requires that model exists prior )
         classifier = tf.contrib.learn.DNNClassifier( feature_columns=feature_columns,
-                                                     hidden_units=[ ?, ?, ? ],
-                                                     n_classes=5,
+                                                     hidden_units=[ 21 ],
+                                                     n_classes=6,
                                                      model_dir="./model/phrase_model" )
-        # perform classification with model
-        # in this case, the data comes from a single wav file
+
+        def get_inputs( data_set ):
+            feature_cols = { k: tf.constant( data_set[ k ].values ) for k in FEATURES }
+            labels = tf.constant( data_set[ LABEL ].values )
+            return feature_columns, labels
+
         def new_samples():
             return np.array( extract_features( path_to_data ),
                              dtype=np.float32 )
 
-        predictions = list( classifier.predict( input_fn=new_samples ) )
+        # perform classification with model
+        # in this case, the data comes from a single wav file
+        predictions = list( classifier.predict( input_fn=lambda : get_inputs( new_samples() ) ) )
 
         print "New Samples, Class Predictions:     {}\n".format( predictions )
 
