@@ -8,7 +8,7 @@ import collections
 import os, argparse
 import re
 
-import extract_features from extract_features
+from extract_features import extract_features
 
 # feature collection return type
 Dataset = collections.namedtuple( 'Dataset', ['data', 'target'] )
@@ -29,11 +29,12 @@ def load_dataset( path_to_set ):
 
     '''
     target, data = [], []
-    for wavfile in os.listdir( path_to_set ):
-        if wavfile.endswith( ".wav" ):
-            data.append( extract_features( wavfile ) )
-            target = re.split( "[]", wavfile )[1]
-            target.append( target )
+    for directory in os.listdir( path_to_set ):
+        for wavfile in os.listdir( path_to_set + '/' + directory ):
+            if wavfile.endswith( ".wav" ):
+                data.append( extract_features( wavfile ) )
+                target = re.split( "[]", wavfile )[1]
+                target.append( target )
 
     data = np.array( data, dtype=np.float32 )
     target = np.array( target, dtype=np.str )
@@ -57,8 +58,8 @@ def use_network( usage, path_to_data ):
     if usage == "-t":
         # construct a training and testing set
         # build, fit, and evaluate model 
-        training_set = load_dataset( path_to_data + "/train" )
-        testing_set = load_dataset( path_to_data + "/test" )
+        training_set = load_dataset( path_to_data + "/Training" )
+        testing_set = load_dataset( path_to_data + "/Testing" )
         
         # information on layer decisions can be found here
         # http://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
@@ -74,19 +75,32 @@ def use_network( usage, path_to_data ):
                                                      n_classes=6,
                                                      model_dir="./model/phrase_model" )
 
-        def get_inputs( data_set ):
-            # construct training data correctly and return in the form of a tensor
-            feature_cols = { k: tf.constant( data_set[ k ].values ) for k in FEATURES } # dictionary of tensors
-            labels = tf.constant( data_set[ LABEL ].values ) # representing targets
-            return feature_columns, labels
+        # def get_inputs( data_set ):
+        #     feature_cols = { k: tf.constant( data_set[ k ].values ) for k in FEATURES } # dictionary of tensors
+        #     labels = tf.constant( data_set[ LABEL ].values ) # representing targets
+        #     return feature_cols, labels
+
+	def get_train_inputs():
+	    # construct training data correctly and return in the form of a tensor
+	    data = tf.constant(training_set.data)
+	    target = tf.constant(training_set.target)
+
+	    return data, target
 
         # Fit to the model, specifying how many steps to train
         # step is 2000 for the time being, this is nearly arbitrary 
-        classifier.fit( input_fn=lambda : get_inputs( training_set ), steps=2000 )
+        classifier.fit( input_fn=get_train_inputs(), steps=2000 )
 
         # If you want to track training progress, you can use a tensor flow monitor
 
-        accuracy_score = classifier.evaluate( input_fn=lambda : get_inputs( testing_set ),
+        # Define the test inputs
+	def get_test_inputs():
+	    data = tf.constant(testing_set.data)
+	    target = tf.constant(testing_set.target)
+
+	    return data, target
+
+        accuracy_score = classifier.evaluate( input_fn=get_test_inputs(),
                                               steps=2000 )["accuracy"]
 
         print "Test Accuracy: {0:f}".format( accuracy_score )
