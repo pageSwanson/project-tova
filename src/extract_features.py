@@ -1,7 +1,6 @@
 import sys
 import numpy as np
 import librosa as rosa
-import librosa.display
 from scipy import io
 
 def slice_chroma( chroma, num_slices ):

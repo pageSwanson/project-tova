@@ -6,6 +6,7 @@ import tensorflow as tf
 import numpy as np
 import collections
 import os, argparse
+import sys
 import re
 
 from extract_features import extract_features
@@ -60,7 +61,7 @@ def use_network( usage, path_to_data ):
         # build, fit, and evaluate model 
         training_set = load_dataset( path_to_data + "/Training" )
         testing_set = load_dataset( path_to_data + "/Testing" )
-        
+
         # information on layer decisions can be found here
         # http://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
         #
@@ -100,10 +101,9 @@ def use_network( usage, path_to_data ):
 
 	    return data, target
 
-        accuracy_score = classifier.evaluate( input_fn=get_test_inputs(),
-                                              steps=2000 )["accuracy"]
-
-        print "Test Accuracy: {0:f}".format( accuracy_score )
+        accuracy_score = classifier.evaluate( input_fn=get_test_inputs(), steps=2000 )["accuracy"]
+        
+        print("Test Accuracy: " + accuracy_score)
 
     elif usage == "-c":
         # Specify that all features have real-value data
@@ -127,10 +127,10 @@ def use_network( usage, path_to_data ):
         # in this case, the data comes from a single wav file
         predictions = list( classifier.predict( input_fn=lambda : get_inputs( new_samples() ) ) )
 
-        print "New Samples, Class Predictions:     {}\n".format( predictions )
+        print("New Samples, Class Predictions:     {}\n".format( predictions ))
 
 if __name__ == "__main__":
     try:
         use_network( sys.argv[1], sys.argv[2] )
     except IndexError:
-        print "You must provide a usage option ( -t, -c ) and a file or directory path."
+        print("You must provide a usage option ( -t, -c ) and a file or directory path.")
