@@ -14,28 +14,33 @@ from extract_features import extract_features
 # feature collection return type
 Dataset = collections.namedtuple( 'Dataset', ['data', 'target'] )
 
-def load_dataset( path_to_set ):
+def load_dataset( path_to_set, fraction ):
     ''' Sort through a directory of files, handling each file as a datapoint
         Perform extraction ( using extract_features ), assign target ( label )
 
         Parameters
 
-        path_to_set : str
-            The path to the dataset directory
+            path_to_set : str
+                The path to the dataset directory
+
+            fraction : float
+                Fraction of files to use for this training round
 
         Returns
 
-        Dataset : collections.namedtuple
-            A tuple containing the data set and the corresponding targets
+            Dataset : collections.namedtuple
+                A tuple containing the data set and the corresponding targets
 
     '''
     target, data = [], []
     for directory in os.listdir( path_to_set ):
+        file_limit = round( fraction * len( [ name for name in os.listdir( '.' ) if os.path.isfile( name ) ] ) )
+        current_file = 0
         for wavfile in os.listdir( path_to_set + '/' + directory ):
+            wavfile = os.listdir( path_to_set + '/' + directory )
             if wavfile.endswith( ".wav" ):
-                data.append( extract_features( wavfile ) )
-                target = re.split( "[]", wavfile )[1]
-                target.append( target )
+                data.append( extract_features( path_to_set + '/' + directory + '/' + wavfile ) )
+                target.append( directory )
 
     data = np.array( data, dtype=np.float32 )
     target = np.array( target, dtype=np.str )
