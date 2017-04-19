@@ -30,8 +30,8 @@ def slice_chroma( chroma, num_slices ):
     slices = [frame_i for frame_i in range( 0, chroma.shape[1] ) if frame_i % interval == 1]
     chroma_sliced = chroma[:, slices]
 
-    print "data is rank:", chroma_sliced.ndim
-    print "banks:", chroma_sliced.shape[0], "frames:", chroma_sliced.shape[1]
+    # print "data is rank:", chroma_sliced.ndim
+    # print "banks:", chroma_sliced.shape[0], "frames:", chroma_sliced.shape[1]
 
     return chroma_sliced
 
@@ -68,8 +68,8 @@ def extract_chroma( wavfile ):
 
     chroma = rosa.feature.chroma_stft( y=y, sr=fs, n_fft=n_fft, hop_length=hop_length, **filterbank_params )
 
-    print "data is rank:", chroma.ndim
-    print "banks:", chroma.shape[0], "frames:", chroma.shape[1]
+    # print "data is rank:", chroma.ndim
+    # print "banks:", chroma.shape[0], "frames:", chroma.shape[1]
 
     chroma_sliced = slice_chroma( chroma, num_slices=26 )
 
