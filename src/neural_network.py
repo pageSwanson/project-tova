@@ -11,6 +11,8 @@ import random
 
 from extract_features import extract_features
 
+tf.logging.set_verbosity(tf.logging.INFO)
+
 # feature collection return type
 Dataset = collections.namedtuple( 'Dataset', ['data', 'label'] )
 
@@ -41,7 +43,7 @@ def load_dataset( classes, path_to_set, fraction ):
 
     # collect a list of all files in the training set
     for i, directory in enumerate( os.listdir( path_to_set ) ):
-        wavfiles = [ ( directory, name ) for name in os.listdir( path_to_set + '/' + directory ) if os.path.isfile( name ) and name.endswith( ".wav" ) ]
+        wavfiles = [ ( directory, name ) for name in os.listdir( path_to_set + directory ) if name.endswith( ".wav" ) ]
 
     # define a limit to sample based upon the specified fraction
     if 0 < fraction and fraction < 1:
@@ -53,7 +55,9 @@ def load_dataset( classes, path_to_set, fraction ):
 
     for directory, name in wavfiles:
         data.append( extract_features( path_to_set + '/' + directory + '/' + name ) )
+        print( "data shape with new example added", data.shape )
         label.append( classes[ directory ] )
+        print( "label shape with new example added", label.shape )
 
     data = np.asarray( data, dtype=np.float32 )
     label = np.asarray( label, dtype=np.int32 )
@@ -96,7 +100,7 @@ def use_network( usage, path_to_data ):
     if usage == '-t':
         # PERFORM TRAINING / TESTING ON THE MODEL
 
-        training_set = load_dataset( classes, path_to_data + "/Training", .2 )
+        training_set = load_dataset( classes, path_to_data + "/Training", .1 )
 
 	def get_train_inputs():
             # construct a training batch using a specified fractional amount
@@ -104,6 +108,9 @@ def use_network( usage, path_to_data ):
 
 	    x = tf.constant(training_set.data)
 	    y = tf.constant(training_set.label)
+
+            print( "training data shape, data", x.get_shape().as_list() )
+            print( "training data shape, label", y.get_shape().as_list() )
 
 	    return x, y
 
@@ -114,13 +121,16 @@ def use_network( usage, path_to_data ):
 
         # If you want to track training progress, you can use a tensor flow monitor
 
-        testing_set = load_dataset( classes, path_to_data + "/Testing", .2 )
+        testing_set = load_dataset( classes, path_to_data + "/Testing", .1 )
 
         # Define the test inputs
 	def get_test_inputs():
 
 	    x = tf.constant(testing_set.data)
 	    y = tf.constant(testing_set.label)
+
+            print( "testing data shape, data", x.get_shape().as_list() )
+            print( "testing data shape, label", y.get_shape().as_list() )
 
 	    return x, y
 
