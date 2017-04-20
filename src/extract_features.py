@@ -26,14 +26,17 @@ def slice_chroma( chroma, num_slices ):
 
     '''
 
-    interval = chroma.shape[1] / num_slices
-    slices = [frame_i for frame_i in range( 0, chroma.shape[1] ) if frame_i % interval == 1]
-    chroma_sliced = chroma[:, slices]
+    # interval = chroma.shape[1] / num_slices
+    # slices = [frame_i for frame_i in range( 0, chroma.shape[1] ) if frame_i % interval == 1]
+    # chroma_sliced = chroma[:, slices]
+
+    # trying something different so my life is easier
+    chroma_sliced = np.mean( chroma, axis=1 )
 
     # print "data is rank:", chroma_sliced.ndim
-    # print "banks:", chroma_sliced.shape[0], "frames:", chroma_sliced.shape[1]
+    # print "data shape is:", chroma_sliced.shape
 
-    return chroma_sliced
+    return chroma_sliced.T
 
 def extract_chroma( wavfile ):
     '''Produce a sliced version of a chromagram created using librosa ( http://librosa.github.io/librosa/ )

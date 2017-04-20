@@ -22,28 +22,23 @@ def load_dataset( classes, path_to_set, fraction ):
 
         Parameters
 
-            path_to_set : str
-                The path to the dataset directory
+        path_to_set : str
+            The path to the dataset directory
 
-            fraction : float
-                Fraction of files to use for this training round
+        fraction : float
+            Fraction of files to use for this training round
 
         Returns
 
-            Tuple of
-                Dataset : collections.namedtuple
-                    A tuple containing the data set and the corresponding targets
-
-                classes : dict
-                    A dictionary mapping instrument labels to indices
+        Dataset : collections.namedtuple
+           A tuple containing the data set and the corresponding targets
 
     '''
-    data = []
-    label = []
 
     # collect a list of all files in the training set
+    wavfiles = []
     for i, directory in enumerate( os.listdir( path_to_set ) ):
-        wavfiles = [ ( directory, name ) for name in os.listdir( path_to_set + directory ) if name.endswith( ".wav" ) ]
+        wavfiles = wavfiles + [ ( directory, name ) for name in os.listdir( path_to_set + '/' + directory ) if name.endswith( ".wav" ) ]
 
     # define a limit to sample based upon the specified fraction
     if 0 < fraction and fraction < 1:
@@ -53,35 +48,44 @@ def load_dataset( classes, path_to_set, fraction ):
         # don't proceed, that's weird
         return None
 
-    for directory, name in wavfiles:
-        data.append( extract_features( path_to_set + '/' + directory + '/' + name ) )
-        print( "data shape with new example added", data.shape )
-        label.append( classes[ directory ] )
-        print( "label shape with new example added", label.shape )
+    print( "Examples in set: ", file_limit )
 
-    data = np.asarray( data, dtype=np.float32 )
-    label = np.asarray( label, dtype=np.int32 )
+    # initialize empty data, labels
+    data = np.zeros( ( file_limit, 36 ), dtype=np.float32 )
+    label = np.zeros( file_limit, dtype=np.int32 )
+
+    for file_i, ( directory, name ) in enumerate( wavfiles ):
+        data[ file_i, : ] = extract_features( path_to_set + '/' + directory + '/' + name )
+        # print( "data shape with new example added", data.shape )
+        label[ file_i ] = classes[ directory ]
+        # print( "label shape with new example added", label.shape )
+
     return Dataset( data=data, label=label )
 
-def use_network( usage, path_to_data ):
+def use_network( usage, path_to_data, fraction=1 ):
     '''Use the network and perform training or classification on a single file
 
         Parameters
 
-            usage : str
-                Specify intent for the neural network
-                
-                options are -t ( train ), -c ( classify )
-                The training option includes testing and an evaluation
+        usage : str
+            Specify intent for the neural network
 
-            path_to_data : str
-                The file path to the dataset, or wavfile you want to classify
+            options are -t ( train ), -c ( classify )
+            The training option includes testing and an evaluation
+
+        path_to_data : str
+            The file path to the dataset, or wavfile you want to classify
+
+        fraction : float
+            Fraction of training set to use (0, 1)
 
     '''
 
     # define class labels for fitting
     classes = dict( zip( [ 'vio', 'tru', 'pia', 'org', 'flu', 'cel' ], [ 0, 1, 2, 3, 4, 5 ] ) )
     print(classes)
+
+    fraction = float( fraction )
 
     # information on layer decisions can be found here
     # http://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
@@ -100,43 +104,44 @@ def use_network( usage, path_to_data ):
     if usage == '-t':
         # PERFORM TRAINING / TESTING ON THE MODEL
 
-        training_set = load_dataset( classes, path_to_data + "/Training", .1 )
+        for iterate in range(0, 5):
 
-	def get_train_inputs():
-            # construct a training batch using a specified fractional amount
-            # return as a tensor
+            training_set = load_dataset( classes, path_to_data + "/Training", fraction )
 
-	    x = tf.constant(training_set.data)
-	    y = tf.constant(training_set.label)
+            def get_train_inputs():
+                # construct a training batch using a specified fractional amount
+                # return as a tensor
 
-            print( "training data shape, data", x.get_shape().as_list() )
-            print( "training data shape, label", y.get_shape().as_list() )
+                x = tf.constant(training_set.data)
+                y = tf.constant(training_set.label)
 
-	    return x, y
+                print( "training data shape, data", x.get_shape().as_list() )
+                print( "training data shape, label", y.get_shape().as_list() )
 
-        # Fit to the model, specifying how many steps to train
-        # step is 2000 for the time being, this is nearly arbitrary 
-        classifier.fit( input_fn=get_train_inputs, steps=1000 )
-        classifier.fit( input_fn=get_train_inputs, steps=1000 )
+                return x, y
 
-        # If you want to track training progress, you can use a tensor flow monitor
+            # Fit to the model, specifying how many steps to train
+            # step is 2000 for the time being, somewhat arbitary
+            classifier.fit( input_fn=get_train_inputs, steps=2000 )
 
-        testing_set = load_dataset( classes, path_to_data + "/Testing", .1 )
+            # If you want to track training progress, you can use a tensor flow monitor
 
-        # Define the test inputs
-	def get_test_inputs():
+            testing_set = load_dataset( classes, path_to_data + "/Testing", fraction )
 
-	    x = tf.constant(testing_set.data)
-	    y = tf.constant(testing_set.label)
+            # Define the test inputs
+            def get_test_inputs():
 
-            print( "testing data shape, data", x.get_shape().as_list() )
-            print( "testing data shape, label", y.get_shape().as_list() )
+                x = tf.constant(testing_set.data)
+                y = tf.constant(testing_set.label)
 
-	    return x, y
+                print( "testing data shape, data", x.get_shape().as_list() )
+                print( "testing data shape, label", y.get_shape().as_list() )
 
-        accuracy_score = classifier.evaluate( input_fn=get_test_inputs, steps=2000 )["accuracy"]
-        
-        print("Accuracy: {0:f}".format( accuracy_score ) )
+                return x, y
+
+            accuracy_score = classifier.evaluate( input_fn=get_test_inputs, steps=1 )["accuracy"]
+            
+            print("Accuracy of iteration {0}: {1:f}".format( iterate, accuracy_score ) )
 
     elif usage == '-c':
         # PERFORM CLASSIFICATION ON A SAMPLE
@@ -159,6 +164,6 @@ def use_network( usage, path_to_data ):
 
 if __name__ == "__main__":
     try:
-        use_network( sys.argv[1], sys.argv[2] )
+        use_network( sys.argv[1], sys.argv[2], sys.argv[3] )
     except IndexError:
-        print("You must provide a usage option ( -t, -c ) and a file or directory path.")
+        print("You must provide a usage option ( -t, -c ), file or directory path, and fraction of set (float).")
