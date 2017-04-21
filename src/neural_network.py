@@ -11,6 +11,7 @@ import random
 
 from extract_features import extract_features
 
+# enable more extensive logging
 tf.logging.set_verbosity(tf.logging.INFO)
 
 # feature collection return type
@@ -95,20 +96,22 @@ def use_network( usage, path_to_data, fraction=1 ):
     feature_columns = [ tf.contrib.layers.real_valued_column( "", dimension=36 ) ]
 
     # output layers determined here, single layer, one neuron for each class label ( 6 )
-    # size of hidden layer, based on mean of input and output neurons ( 20 ) 
+    # size of hidden layer, based on mean of input and output neurons ( ~22, mean(22, 6) = 14 )
     classifier = tf.contrib.learn.DNNClassifier( feature_columns=feature_columns,
-                                                 hidden_units=[ 20 ], # TODO consider another layer? could improve response
+                                                 hidden_units=[ 22, 14 ], # TODO consider another layer? could improve response
                                                  n_classes=len( classes ),
                                                  model_dir="../model/voice_model",
-                                                 config=tf.contrib.learn.RunConfig( save_checkpoints_secs=5 ) ) # config, for validation monitor
+                                                 config=tf.contrib.learn.RunConfig( save_checkpoints_secs=5 ) ) # config, for monitoring
 
     if usage == '-t':
         # PERFORM TRAINING / TESTING ON THE MODEL
+        print( "___________________________" )
+        print( "training on a {} percent set".format( fraction * 100 ) )
 
-        for iterate in range(0, 5):
+        accuracies = []
+        for iterate in range(0, 4):
 
             training_set = load_dataset( classes, path_to_data + "/Training", fraction )
-            testing_set = load_dataset( classes, path_to_data + "/Testing", fraction )
 
             def get_train_inputs():
                 # construct a training batch using a specified fractional amount
@@ -122,48 +125,32 @@ def use_network( usage, path_to_data, fraction=1 ):
 
                 return x, y
 
+            testing_set = load_dataset( classes, path_to_data + "/Testing", fraction )
+
             def get_test_inputs():
                 # construct a test batch with specified fractional amount
                 
                 x = tf.constant( testing_set.data )
                 y = tf.constant( testing_set.label )
 
-                print( "testing data shape,", x.get_shape().as_list() )
-                print( "testing label shape,", y.get_shape().as_list() )
+                print( "testing data shape,", x.shape )
+                print( "testing label shape,", y.shape )
 
                 return x, y
 
             # https://www.tensorflow.org/get_started/monitors
-            # this should improve training process, prevent overfitting 
-            validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(
-                input_fn=get_test_inputs,
-                eval_steps=1, # added as tip from https://github.com/tensorflow/tensorflow/issues/6727
-                every_n_steps=100,
-                early_stopping_metric="loss",
-                early_stopping_metric_minimize=True,
-                early_stopping_rounds=400 )
+            # try to do early stopping if you can figure it out, maybe adding that extra wrapper?
 
             # Fit to the model, specifying how many steps to train
             # step is 2000 for the time being, somewhat arbitary
-            classifier.fit( input_fn=get_train_inputs, steps=4000, monitors=[ validation_monitor ] )
+            classifier.fit( input_fn=get_train_inputs, steps=2000 )
+            classifier.fit( input_fn=get_train_inputs, steps=2000 )
 
-            # If you want to track training progress, you can use a tensor flow monitor
-
-
-            # Define the test inputs
-            # def get_test_inputs():
-
-            #     x = tf.constant(testing_set.data)
-            #     y = tf.constant(testing_set.label)
-
-            #     print( "testing data shape, data", x.get_shape().as_list() )
-            #     print( "testing data shape, label", y.get_shape().as_list() )
-
-            #     return x, y
-
-            accuracy_score = classifier.evaluate( x=tf.constant( testing_set.data ), y=tf.constant( testing_set.label ), steps=1 )["accuracy"]
+            results = classifier.evaluate( input_fn=get_test_inputs, steps=1 )
+            accuracies.append( results[ 'accuracy' ]  )
             
-            print("Accuracy of iteration {0}: {1:f}".format( iterate, accuracy_score ) )
+            print("\n_______ accuracy thus far... {} _______".format( accuracies ) )
+            print("\n{}\n".format( results ) ) 
 
     elif usage == '-c':
         # PERFORM CLASSIFICATION ON A SAMPLE
