@@ -105,10 +105,14 @@ def use_network( usage, path_to_data, fraction=1 ):
 
     if usage == '-t':
         # PERFORM TRAINING / TESTING ON THE MODEL
-        print( "___________________________" )
+        print( "\n___________________________" )
         print( "training on a {} percent set".format( fraction * 100 ) )
+        print( "produce fixed validation set..\n" )
 
         accuracies = []
+
+        testing_set = load_dataset( classes, path_to_data + "/Testing", fraction )
+
         for iterate in range(0, 4):
 
             training_set = load_dataset( classes, path_to_data + "/Training", fraction )
@@ -125,8 +129,6 @@ def use_network( usage, path_to_data, fraction=1 ):
 
                 return x, y
 
-            testing_set = load_dataset( classes, path_to_data + "/Testing", fraction )
-
             def get_test_inputs():
                 # construct a test batch with specified fractional amount
                 
@@ -140,6 +142,8 @@ def use_network( usage, path_to_data, fraction=1 ):
 
             # https://www.tensorflow.org/get_started/monitors
             # try to do early stopping if you can figure it out, maybe adding that extra wrapper?
+
+            print()
 
             # Fit to the model, specifying how many steps to train
             # step is 2000 for the time being, somewhat arbitary
