@@ -30,8 +30,8 @@ def slice_chroma( chroma, num_slices ):
     # slices = [frame_i for frame_i in range( 0, chroma.shape[1] ) if frame_i % interval == 1]
     # chroma_sliced = chroma[:, slices]
 
-    chroma_sliced = np.diff( chroma, axis=1 )
-    chroma_sliced = np.mean( chroma_sliced, axis=1 ) * 1e3
+    # chroma_sliced = np.diff( chroma, axis=1 )
+    chroma_sliced = np.mean( chroma, axis=1 )
 
     #print "data is rank:", chroma_sliced.ndim
     #print "data shape is:", chroma_sliced.shape

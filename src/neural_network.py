@@ -96,9 +96,10 @@ def use_network( usage, path_to_data, fraction=1 ):
     feature_columns = [ tf.contrib.layers.real_valued_column( "", dimension=36 ) ]
 
     # output layers determined here, single layer, one neuron for each class label ( 6 )
-    # size of hidden layer, based on mean of input and output neurons ( defined by 4 uniform numbers between 36 and 6 )
+    # size of hidden layer, based on mean of input and output neurons ( using rule of thumb found at stack overflow, sqrt( in * out ) )
+    
     classifier = tf.contrib.learn.DNNClassifier( feature_columns=feature_columns,
-                                                 hidden_units=[ 26, 16 ], # TODO consider another layer? could improve response
+                                                 hidden_units=[ 16 ], # TODO consider another layer? could improve response
                                                  n_classes=len( classes ),
                                                  model_dir="../model/voice_model",
                                                  config=tf.contrib.learn.RunConfig( save_checkpoints_secs=5 ) ) # config, for monitoring
@@ -151,7 +152,7 @@ def use_network( usage, path_to_data, fraction=1 ):
             classifier.fit( input_fn=get_train_inputs, steps=2000 )
 
             results = classifier.evaluate( input_fn=get_test_inputs, steps=1 )
-            stats.append( results[ 'accuracy' ], results[ 'loss' ]  )
+            stats.append( ( results[ 'accuracy' ], results[ 'loss' ] ) )
             
             print("\n_______ accuracy, loss thus far... {} _______".format( stats ) )
             print("\n{}\n".format( results ) ) 
