@@ -161,12 +161,14 @@ def use_network( usage, path_to_data, fraction=1 ):
         # PERFORM CLASSIFICATION ON A SAMPLE
 
         def get_new_samples():
-            return np.array( extract_features( path_to_data ),
-                             dtype=np.float32 )
+            feature_data = np.array( extract_features( path_to_data ), dtype=np.float32 )
+            print( "feature data input shape,", feature_data.shape )
+            return feature_data
 
         # perform classification with model
         # in this case, the data comes from a set of 'real' samples
         predictions = list( classifier.predict( input_fn=get_new_samples ) )
+
         # print label with voice name (instrument)
         voice_predictions = []
         for result in predictions:
