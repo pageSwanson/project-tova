@@ -56,9 +56,9 @@ def load_dataset( classes, path_to_set, fraction ):
     data = np.zeros( ( file_limit, 36 ), dtype=np.float32 )
     label = np.zeros( file_limit, dtype=np.int32 )
 
-    for file_i, ( directory, name ) in enumerate( wavfiles ):
-        data[ file_i, : ] = extract_features( path_to_set + '/' + directory + '/' + name )
-        label[ file_i ] = classes[ directory ]
+    for file_n, ( directory, name ) in enumerate( wavfiles ):
+        data[ file_n, : ] = extract_features( path_to_set + '/' + directory + '/' + name )
+        label[ file_n ] = classes[ directory ]
 
     return Dataset( data=data, label=label )
 
@@ -83,7 +83,6 @@ def use_network( usage, path_to_data, fraction=1 ):
 
     # define class labels for fitting
     classes = dict( zip( [ 'vio', 'tru', 'pia', 'org', 'flu', 'cel' ], [ 0, 1, 2, 3, 4, 5 ] ) )
-    print(classes)
 
     fraction = float( fraction )
 
@@ -98,7 +97,7 @@ def use_network( usage, path_to_data, fraction=1 ):
     # size of hidden layer, based on mean of input and output neurons ( using rule of thumb found at stack overflow, sqrt( in * out ) )
     
     classifier = tf.contrib.learn.DNNClassifier( feature_columns=feature_columns,
-                                                 hidden_units=[ 16 ], # TODO consider another layer? could improve response
+                                                 hidden_units=[ 16 ], # another layer marginally improves response, results don't indicate any impressive change
                                                  n_classes=len( classes ),
                                                  model_dir="../model/voice_model",
                                                  config=tf.contrib.learn.RunConfig( save_checkpoints_secs=5 ) ) # config, for monitoring
@@ -113,8 +112,7 @@ def use_network( usage, path_to_data, fraction=1 ):
 
         testing_set = load_dataset( classes, path_to_data + "/Testing", fraction )
 
-        for iterate in range(0, 1):
-
+        for iterate in range(0, 4): 
             training_set = load_dataset( classes, path_to_data + "/Training", fraction )
 
             def get_train_inputs():
@@ -149,6 +147,8 @@ def use_network( usage, path_to_data, fraction=1 ):
             # step is 2000 for the time being, somewhat arbitary
             classifier.fit( input_fn=get_train_inputs, steps=2000 )
             classifier.fit( input_fn=get_train_inputs, steps=2000 )
+            classifier.fit( input_fn=get_train_inputs, steps=2000 )
+            classifier.fit( input_fn=get_train_inputs, steps=2000 )
 
             results = classifier.evaluate( input_fn=get_test_inputs, steps=1 )
             stats.append( ( results[ 'accuracy' ], results[ 'loss' ] ) )
@@ -160,9 +160,7 @@ def use_network( usage, path_to_data, fraction=1 ):
         # PERFORM CLASSIFICATION ON A SAMPLE
 
         def get_new_samples():
-            feature_data = np.array( extract_features( path_to_data ), dtype=np.float32 )
-            print( "feature data input shape,", feature_data.shape )
-            return feature_data
+            return feature_data = np.array( extract_features( path_to_data ), dtype=np.float32 )
 
         # perform classification with model
         # in this case, the data comes from a set of 'real' samples
