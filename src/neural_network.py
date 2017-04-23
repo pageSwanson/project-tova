@@ -45,11 +45,12 @@ def load_dataset( classes, path_to_set, fraction ):
     if 0 < fraction and fraction < 1:
         file_limit = int( round( fraction * len( wavfiles ) ) )
         wavfiles = random.sample( wavfiles, file_limit ) # sample fraction of total set
-    elif fraction == 0:
-        # don't proceed, that's weird
-        return None
-
-    print( "Examples in set: ", file_limit )
+    else:
+        if fraction == 1:
+            file_limit = len( wavfiles )
+        else:
+            # don't proceed, that's weird
+            return None
 
     # initialize empty data, labels
     data = np.zeros( ( file_limit, 36 ), dtype=np.float32 )
@@ -57,9 +58,7 @@ def load_dataset( classes, path_to_set, fraction ):
 
     for file_i, ( directory, name ) in enumerate( wavfiles ):
         data[ file_i, : ] = extract_features( path_to_set + '/' + directory + '/' + name )
-        # print( "data shape with new example added", data.shape )
         label[ file_i ] = classes[ directory ]
-        # print( "label shape with new example added", label.shape )
 
     return Dataset( data=data, label=label )
 
@@ -114,7 +113,7 @@ def use_network( usage, path_to_data, fraction=1 ):
 
         testing_set = load_dataset( classes, path_to_data + "/Testing", fraction )
 
-        for iterate in range(0, 6):
+        for iterate in range(0, 1):
 
             training_set = load_dataset( classes, path_to_data + "/Training", fraction )
 

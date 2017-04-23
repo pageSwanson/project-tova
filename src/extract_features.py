@@ -35,8 +35,8 @@ def slice_chroma( chroma, num_slices ):
 
     chroma_sliced = chroma_sliced.reshape( 1, chroma_sliced.shape[ 0 ] )
 
-    print "data is rank:", chroma_sliced.ndim
-    print "data shape is:", chroma_sliced.shape
+    # print "data is rank:", chroma_sliced.ndim
+    # print "data shape is:", chroma_sliced.shape
 
     return chroma_sliced
 
