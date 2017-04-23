@@ -26,13 +26,12 @@ def slice_chroma( chroma, num_slices ):
 
     '''
 
-    # interval = chroma.shape[1] / num_slices
-    # slices = [frame_i for frame_i in range( 0, chroma.shape[1] ) if frame_i % interval == 1]
-    # chroma_sliced = chroma[:, slices]
+    # standard slicing, kept for potential use of PCA
+    #interval = chroma.shape[1] / num_slices
+    #slices = [frame_i for frame_i in range( 0, chroma.shape[1] ) if frame_i % interval == 1]
+    #chroma_sliced = chroma[:, slices]
 
-    # chroma_sliced = np.diff( chroma, axis=1 )
     chroma_sliced = np.mean( chroma, axis=1 )
-
     chroma_sliced = chroma_sliced.reshape( 1, chroma_sliced.shape[ 0 ] )
 
     # print "data is rank:", chroma_sliced.ndim
