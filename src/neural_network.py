@@ -24,16 +24,16 @@ def load_dataset( classes, path_to_set, fraction ):
 
         Parameters
 
-        path_to_set : str
-            The path to the dataset directory
+            path_to_set : str
+                The path to the dataset directory
 
-        fraction : float
-            Fraction of files to use for this training round
+            fraction : float
+                Fraction of files to use for this training round
 
         Returns
 
-        Dataset : collections.namedtuple
-           A tuple containing the data set and the corresponding targets
+            Dataset : collections.namedtuple
+                A tuple containing the data set and the corresponding targets
 
     '''
 
@@ -68,17 +68,17 @@ def use_network( usage, path_to_data, fraction=1 ):
 
         Parameters
 
-        usage : str
-            Specify intent for the neural network
+            usage : str
+                Specify intent for the neural network
 
-            options are -t ( train ), -c ( classify )
-            The training option includes testing and an evaluation
+                options are -t ( train ), -c ( classify )
+                The training option includes testing and an evaluation
 
-        path_to_data : str
-            The file path to the dataset, or wavfile you want to classify
+            path_to_data : str
+                The file path to the dataset, or wavfile you want to classify
 
-        fraction : float
-            Fraction of training set to use (0, 1)
+            fraction : float
+                Fraction of training set to use (0, 1)
 
     '''
 
