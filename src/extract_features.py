@@ -1,3 +1,4 @@
+''' http://librosa.github.io/librosa/ provides a library for extracting a variety of audio features '''
 import sys
 import numpy as np
 import librosa as rosa
